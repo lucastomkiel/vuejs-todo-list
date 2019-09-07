@@ -1,28 +1,81 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <h1>Tarefas</h1>
+    <ProgressTask :progress="progress"></ProgressTask>
+    <NewTask @taskAdded="addTask"></NewTask>
+    <Tasks
+      :tasks="tasks"
+      @taskDeleted="removeTask"
+      @taskStateChange="stateChangeTask"></Tasks>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Tasks from "@/components/Tasks";
+import NewTask from "@/components/NewTask";
+import ProgressTask from "@/components/ProgressTask";
 
 export default {
   name: 'app',
   components: {
-    HelloWorld
+    Tasks,
+    NewTask,
+    ProgressTask
+  },
+  computed: {
+    progress() {
+      const total = this.tasks.length;
+      const done = this.tasks.filter(t => !t.pending).length;
+      return Math.round(done / total * 100) || 0;
+    }
+  },
+  watch: {
+    tasks: {
+      deep: true,
+      handler() {
+        localStorage.setItem('tasks', JSON.stringify(this.tasks));
+      }
+    }
+  },
+  data() {
+    return {
+      tasks: []
+    }
+  },
+  created() {
+    const json = localStorage.getItem('tasks');
+    this.tasks = JSON.parse(json) || [];
+  },
+  methods: {
+    addTask(task) {
+      this.tasks.push({
+        name: task.name,
+        pending: task.pending || true
+      });
+    },
+    removeTask(task) {
+      const taskId = this.tasks.indexOf(task);
+      this.tasks.splice(taskId, 1);
+    },
+    stateChangeTask(task) {
+      const taskId = this.tasks.indexOf(task);
+      this.tasks[taskId].pending = !this.tasks[taskId].pending;
+    }
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+  body {
+    background: floralwhite;
+  }
+
+  h1, h3 {
+    font-family: 'Livvic', sans-serif;
+  }
+
+  h1 {
+    color: darkgrey;
+    text-align: center;
+  }
 </style>
